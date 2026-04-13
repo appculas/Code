@@ -1,0 +1,425 @@
+```html
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KULAS HTML Editor - Versi Lengkap</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --oc-blue: #007bff;
+            --oc-dark-bg: #1e1e1e;
+            --oc-header-bg: #2d2d2d;
+            --oc-sidebar-bg: #252526;
+            --oc-border: #444;
+            --oc-text: #d4d4d4;
+        }
+
+        body {
+            background-color: var(--oc-dark-bg);
+            color: var(--oc-text);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        /* Navigasi Utama */
+        .navbar {
+            height: 56px;
+            background-color: white;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            color: #333;
+            justify-content: space-between;
+        }
+
+        .editor-layout {
+            display: flex;
+            height: calc(100vh - 56px);
+        }
+
+        /* Bar Sisi Kiri */
+        .sidebar {
+            width: 50px;
+            background-color: #f8f9fa;
+            border-right: 1px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding-top: 15px;
+            gap: 20px;
+            color: #666;
+        }
+
+        /* Editor Utama */
+        .main-editor {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+        }
+
+        .file-tabs {
+            height: 40px;
+            background-color: #f1f3f5;
+            display: flex;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .tab {
+            padding: 0 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            border-right: 1px solid #ddd;
+            background: white;
+            color: #333;
+            font-weight: 500;
+        }
+
+        .code-area {
+            flex: 1;
+            display: flex;
+            position: relative;
+        }
+
+        .line-numbers {
+            width: 45px;
+            background-color: #f8f9fa;
+            color: #adb5bd;
+            text-align: right;
+            padding: 15px 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            user-select: none;
+            border-right: 1px solid #eee;
+            overflow: hidden;
+        }
+
+        textarea {
+            flex: 1;
+            border: none;
+            outline: none;
+            padding: 15px;
+            font-family: 'Consolas', 'Monaco', monospace;
+            font-size: 14px;
+            resize: none;
+            color: #212529;
+            background: white;
+            line-height: 1.5;
+            white-space: pre;
+            overflow-x: auto;
+        }
+
+        /* Panel Output Kanan */
+        .output-container {
+            width: 45%;
+            border-left: 4px solid #ddd;
+            display: flex;
+            flex-direction: column;
+            background: #f8f9fa;
+        }
+
+        .output-header {
+            height: 40px;
+            background-color: #f1f3f5;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            align-items: center;
+            padding: 0 15px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #495057;
+            justify-content: space-between;
+        }
+
+        /* Butang Lari (Run) */
+        .btn-run {
+            background-color: #007bff;
+            color: white;
+            padding: 6px 24px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: 0.2s;
+        }
+
+        .btn-run:hover {
+            background-color: #0056b3;
+        }
+
+        #previewFrame {
+            flex: 1;
+            background: white;
+        }
+
+        .logo-text {
+            font-weight: 800;
+            font-size: 22px;
+            color: #007bff;
+            letter-spacing: 1px;
+        }
+
+        .logo-text span {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Bar Navigasi Atas -->
+    <header class="navbar">
+        <div class="flex items-center gap-6">
+            <div class="logo-text">KULAS</div>
+            <div class="hidden md:flex gap-4 text-sm font-medium">
+                <a href="#" class="text-blue-600">Laman Utama</a>
+                <a href="#">Tutorial</a>
+                <a href="#">Cabaran</a>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <!-- Input Nama Fail Lengkap -->
+            <input 
+                id="fileNameInput" 
+                type="text" 
+                placeholder="index.html" 
+                class="border border-gray-300 rounded px-3 py-1 text-sm focus:ring-1 focus:ring-blue-500 outline-none w-48"
+            >
+            <button onclick="downloadHTML()" title="Muat Turun Fail Ke Peranti" class="text-gray-600 hover:text-blue-600 p-2">
+                <i class="fas fa-download"></i>
+            </button>
+            <button onclick="runCode()" class="btn-run">
+                <i class="fas fa-play"></i> JALANKAN KOD
+            </button>
+        </div>
+    </header>
+
+    <div class="editor-layout">
+        
+        <!-- Bar Sisi Ikon -->
+        <aside class="sidebar">
+            <i class="fas fa-file-code text-blue-500 text-lg" title="Fail"></i>
+            <i class="fas fa-search" title="Carian"></i>
+            <i class="fas fa-code-branch" title="Versi"></i>
+            <i class="fas fa-project-diagram" title="Struktur"></i>
+            <div class="mt-auto mb-4">
+                <i class="fas fa-cog" title="Tetapan"></i>
+            </div>
+        </aside>
+
+        <!-- Bahagian Editor Kod -->
+        <section class="main-editor">
+            <div class="file-tabs">
+                <div class="tab">
+                    <i class="fab fa-html5 text-orange-500"></i>
+                    index.html
+                </div>
+            </div>
+            
+            <div class="code-area">
+                <div id="lineNumbers" class="line-numbers">
+                    1
+                </div>
+                <textarea 
+                    id="htmlInput" 
+                    spellcheck="false"
+                    oninput="handleInput()"
+                    onscroll="syncScroll()"
+                    placeholder="Sila masukkan atau tampal kod HTML anda di sini..."
+                ><!DOCTYPE html>
+<html>
+<head>
+    <style>
+        /* CONTOH CSS MODERN */
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 40px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            text-align: center;
+        }
+
+        h1 { margin-bottom: 20px; font-size: 2.5em; }
+
+        .btn-action {
+            background: #FFD43B;
+            color: #306998;
+            border: none;
+            padding: 12px 24px;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn-action:hover {
+            transform: scale(1.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>KULAS IDE</h1>
+        <p>Editor kod HTML, CSS, dan JS yang pantas.</p>
+        <button class="btn-action">Terokai Sekarang</button>
+    </div>
+</body>
+</html></textarea>
+            </div>
+        </section>
+
+        <!-- Bahagian Output Pratonton -->
+        <section class="output-container" id="outputPane">
+            <div class="output-header">
+                <span>HASIL PRATONTON (OUTPUT)</span>
+                <div class="flex gap-3">
+                    <button onclick="clearAll()" class="text-red-500 hover:text-red-700 text-[10px] uppercase">Padam Semua</button>
+                    <button onclick="toggleFullscreen()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fas fa-expand-alt"></i>
+                    </button>
+                </div>
+            </div>
+            <iframe id="previewFrame" name="previewFrame"></iframe>
+        </section>
+    </div>
+
+    <!-- Notifikasi Toast -->
+    <div id="toast" class="fixed bottom-6 right-6 bg-gray-800 text-white px-6 py-3 rounded shadow-2xl transition-all duration-300 transform translate-y-20 z-50">
+        Status dipaparkan di sini
+    </div>
+
+    <script>
+        const htmlInput = document.getElementById('htmlInput');
+        const lineNumbers = document.getElementById('lineNumbers');
+        const previewFrame = document.getElementById('previewFrame');
+        const fileNameInput = document.getElementById('fileNameInput');
+        const toast = document.getElementById('toast');
+
+        function handleInput() {
+            syncLines();
+        }
+
+        function syncLines() {
+            const lines = htmlInput.value.split('\n').length;
+            let lineStr = '';
+            for (let i = 1; i <= Math.max(lines, 20); i++) {
+                lineStr += i + '<br>';
+            }
+            lineNumbers.innerHTML = lineStr;
+        }
+
+        function syncScroll() {
+            lineNumbers.scrollTop = htmlInput.scrollTop;
+        }
+
+        function runCode() {
+            const code = htmlInput.value;
+            const previewDoc = previewFrame.contentDocument || previewFrame.contentWindow.document;
+            
+            previewDoc.open();
+            previewDoc.write(code);
+            previewDoc.close();
+            
+            showToast("Kod Berjaya Dijalankan!");
+        }
+
+        function downloadHTML() {
+            const code = htmlInput.value;
+            if (!code.trim()) {
+                showToast("Ralat: Kod tidak boleh kosong!");
+                return;
+            }
+
+            let name = fileNameInput.value.trim();
+            if (!name) {
+                const tarikh = new Date().toISOString().slice(0,10);
+                name = `kulas_projek_${tarikh}`;
+            }
+
+            if (!name.toLowerCase().endsWith('.html')) {
+                name += '.html';
+            }
+
+            try {
+                const blob = new Blob([code], { type: 'text/html' });
+                const url = URL.createObjectURL(blob);
+                const pautan = document.createElement('a');
+                pautan.href = url;
+                pautan.download = name;
+                document.body.appendChild(pautan);
+                pautan.click();
+                
+                setTimeout(() => {
+                    document.body.removeChild(pautan);
+                    window.URL.revokeObjectURL(url);
+                    showToast(`Fail "${name}" Berjaya Disimpan!`);
+                }, 100);
+            } catch (err) {
+                showToast("Ralat Sistem: Gagal menyimpan fail.");
+            }
+        }
+
+        function clearAll() {
+            if (confirm("Adakah anda pasti mahu memadamkan semua kod?")) {
+                htmlInput.value = "";
+                syncLines();
+                runCode();
+                showToast("Editor dikosongkan.");
+            }
+        }
+
+        function showToast(msg) {
+            toast.innerText = msg;
+            toast.classList.remove('translate-y-20');
+            setTimeout(() => {
+                toast.classList.add('translate-y-20');
+            }, 3000);
+        }
+
+        function toggleFullscreen() {
+            const output = document.getElementById('outputPane');
+            if (output.style.width === '100%') {
+                output.style.width = '45%';
+            } else {
+                output.style.width = '100%';
+            }
+        }
+
+        window.onload = () => {
+            syncLines();
+            runCode();
+        };
+
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                runCode();
+            }
+        });
+    </script>
+</body>
+</html>
+
+```
